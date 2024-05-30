@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-export default function Login(){
+const Login = () => {
     const router = useRouter();
     const [user, setUser] = useState({
         email: "",
@@ -23,7 +23,11 @@ export default function Login(){
           const response = await axios.post("/api/login", user);
           console.log("Success", response.data);
           toast.success(response.data.message);
-          router.push("login")
+          if(response.data.user === "seller"){
+            router.push("propertyform");
+          } else{
+            router.push("properties");
+          }
           
         } catch (error: any) {
           toast.error(error.message);
@@ -69,3 +73,5 @@ export default function Login(){
         </main>
     )
 }
+
+export default Login;

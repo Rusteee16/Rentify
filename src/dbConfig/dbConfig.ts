@@ -9,8 +9,10 @@ export async function connect(){
             console.log('MongoDB connected.');            
         })
 
-        connection.on('error', () => {
+        connection.on('error', (error) => {
             console.log('MongoDb connection error. Please make sure MongoDB is running.');
+            console.log(error);
+            
             process.exit();            
         })
         

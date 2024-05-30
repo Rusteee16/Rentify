@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropertyCard from '@/ui/propertycard/page';
@@ -5,32 +7,34 @@ import PropertyCard from '@/ui/propertycard/page';
 export default function Properties() {
     const [properties, setProperties] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [propertiesPerPage] = useState(8);
+    const [totalProperties, setTotalProperties] = useState(0);
+    const propertiesPerPage = 8;
 
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const response = await axios.get(`/api/properties`, {params: {page: currentPage, 
-                    limit: propertiesPerPage}});
+                const response = await axios.get(`/api/properties`, {
+                    params: { page: currentPage, limit: propertiesPerPage }
+                });
+                // console.log(response);
+                
                 setProperties(response.data.properties);
+                setTotalProperties(response.data.totalProperties);
             } catch (error) {
                 console.error('Error fetching properties:', error);
             }
         };
 
         fetchProperties();
-    }, [currentPage, propertiesPerPage]);
+    }, [currentPage]);
 
-    const totalPages = Math.ceil(properties.length / propertiesPerPage);
-    const indexOfLastProperty = currentPage * propertiesPerPage;
-    const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
-    const currentProperties = properties.slice(indexOfFirstProperty, indexOfLastProperty);
+    const totalPages = Math.ceil(totalProperties / propertiesPerPage);
 
     return (
         <main className='flex items-center justify-center flex-col'>
             <h1 className="my-16 text-center text-9xl font-extrabold text-amber-500">Rentify</h1>
             <div className="w-10/12 grid grid-cols-4 gap-4">
-                {currentProperties.map((property, index) => (
+                {properties.map((property, index) => (
                     <PropertyCard key={index} property={property} />
                 ))}
             </div>

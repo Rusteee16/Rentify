@@ -2,11 +2,12 @@ import { connect } from "@/dbConfig/dbConfig";
 import {User} from "@/models/dataSchema";
 import bcryptjs from 'bcryptjs';
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 connect()
 
 export async function POST(request: NextRequest){
-    try {
+    try {   
         const reqBody = await request.json();
         const {email, password} = reqBody;
 
@@ -19,7 +20,17 @@ export async function POST(request: NextRequest){
             return NextResponse.json({error: "Password does not match"},{status: 400})
         }
 
-        const response = NextResponse.json({message: "Login Successfull!", success: true});
+        const tokenData = {
+            id: user._id,
+            email: user.email,
+            type: user.type
+        };
+
+        const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!,{expiresIn: "1d"});
+
+        const response = NextResponse.json({message: "Login Successfull!", success: true, user: user.type});
+
+        response.cookies.set("token", token,{httpOnly: true});
 
         return response;
 

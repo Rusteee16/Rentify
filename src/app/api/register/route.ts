@@ -8,9 +8,9 @@ connect();
 export async function POST(request: NextRequest) {
     try {
         const reqBody = await request.json();
-        const { username, email, password, firstName, lastName, mobile, type } = reqBody;
+        const {email, password, fname, lname, mobile, type } = reqBody;
 
-        console.log(reqBody);
+        // console.log("Backend -->", reqBody);
 
         const user = await User.findOne({ email });
 
@@ -22,16 +22,18 @@ export async function POST(request: NextRequest) {
         const hashedPassword = await bcryptjs.hash(password, salt);
 
         const newUser = new User({
-            firstName,
-            lastName,
+            fname,
+            lname,
             email,
             mobile,
             password: hashedPassword,
             type
         });
 
+        
+
         const savedUser = await newUser.save();
-        console.log(savedUser);
+        // console.log(savedUser);
 
         return NextResponse.json({ message: "User added successfully", success: true, savedUser });
 

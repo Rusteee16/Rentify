@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function Register() {
+const Register = () => {
     const router = useRouter();
     const [user, setUser] = useState({
         fname: "",
@@ -23,7 +23,7 @@ export default function Register() {
     const OnSignUp = async () => {
         try {
           SetLoading(true);
-          console.log(user);
+          console.log("Frontend -->",user);
           const response = await axios.post("/api/register", user);
           console.log("Success", response.data);
           toast.success(response.data.message);
@@ -93,3 +93,5 @@ export default function Register() {
         </main>
     );
 }
+
+export default Register;
