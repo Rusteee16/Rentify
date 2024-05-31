@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import PropertyCard from '@/ui/propertycard/page';
+import PropertyCard from '@/components/properties/page';
 
 export default function Properties() {
     const [properties, setProperties] = useState([]);

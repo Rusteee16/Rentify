@@ -1,35 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import PropertyCard from '@/ui/propertycard/page';
-
-interface PropertyData {
-    user:{
-        email: string,
-        likes: number,
-    };
-    basicInformation: {
-        address: string;
-        listingPrice: string;
-        yearBuilt: string;
-    };
-    propertySize: {
-        totalSquareFootage: string;
-    };
-    interiorFeatures: {
-        bedrooms: string;
-        bathrooms: string;
-        floors: string;
-    };
-    communityAndLocation: {
-        localAmenities: string;
-    };
-    contactInformation: {
-        sellerMobile: string;
-        openTime: string;
-    };
-}
+import { IPropertyData } from '@/interfaces/IProperties';
+import PropertyCard from '@/components/propertyform/page';
 
 const StyledInput: React.FC<{ label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }> = ({ label, value, onChange }) => (
     <label className="form-control w-full max-w-xs p-6 ">
@@ -41,149 +15,173 @@ const StyledInput: React.FC<{ label: string; value: string; onChange: (e: React.
 );
 
 const PropertyForm = () => {
-    const [propertyData, setPropertyData] = useState<PropertyData>({
-        user:{
-            email: '',
-            likes: 0,
-        },
-        basicInformation: {
-            address: '',
-            listingPrice: '',
-            yearBuilt: ''
-        },
-        propertySize: {
-            totalSquareFootage: ''
-        },
-        interiorFeatures: {
-            bedrooms: '',
-            bathrooms: '',
-            floors: '',
-        },
-        communityAndLocation: {
-            localAmenities: '',
-        },
-        contactInformation: {
-            sellerMobile: '',
-            openTime: ''
-        }
+    const [propertyData, setPropertyData] = useState<IPropertyData>({
+        userEmail: '',
+        userLikes: 0,
+        address: '',
+        listingPrice: '',
+        yearBuilt: '',
+        totalSquareFootage: '',
+        bedrooms: '',
+        bathrooms: '',
+        floors: '',
+        localAmenities: '',
+        sellerMobile: '',
+        openTime: ''
     });
 
-    const [properties, setProperties] = useState([]);
+    const [properties, setProperties] = useState<IPropertyData[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalProperties, setTotalProperties] = useState(0);
+    const [editMode, setEditMode] = useState(false);
     const propertiesPerPage = 8;
 
-    useEffect(() => {
-        const fetchProperties = async () => {
-            try {
-                const response = await axios.get(`/api/propertyform`, {
-                    params: { page: currentPage, limit: propertiesPerPage }
-                });
-                // console.log(response);
-                
-                setProperties(response.data.properties);
-                setTotalProperties(response.data.totalProperties);
-            } catch (error) {
-                console.error('Error fetching properties:', error);
-            }
-        };
+    const formRef = useRef<HTMLDivElement>(null);
 
+    const fetchProperties = async () => {
+        try {
+            const response = await axios.get(`/api/propertyform`, {
+                params: { page: currentPage, limit: propertiesPerPage }
+            });
+            setProperties(response.data.properties);
+            setTotalProperties(response.data.totalProperties);
+        } catch (error) {
+            console.error('Error fetching properties:', error);
+        }
+    };
+
+    useEffect(() => {
         fetchProperties();
     }, [currentPage]);
 
     const totalPages = Math.ceil(totalProperties / propertiesPerPage);
 
-    const handleChange = (category: keyof PropertyData, field: string, value: string) => {
+    const handleChange = (field: keyof IPropertyData, value: string) => {
         setPropertyData(prevState => ({
             ...prevState,
-            [category]: {
-                ...prevState[category],
-                [field]: value
-            }
+            [field]: value
         }));
     };
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('/api/propertyform', propertyData);
-            console.log(response.data);
-            // Handle success
+            if (editMode) {
+                await axios.put(`/api/propertyform`, propertyData, {
+                    params: {
+                        id: propertyData._id
+                    }
+                });
+            } else {
+                await axios.post('/api/propertyform', propertyData);
+            }
+            setPropertyData({
+                userEmail: '',
+                userLikes: 0,
+                address: '',
+                listingPrice: '',
+                yearBuilt: '',
+                totalSquareFootage: '',
+                bedrooms: '',
+                bathrooms: '',
+                floors: '',
+                localAmenities: '',
+                sellerMobile: '',
+                openTime: ''
+            });
+            setEditMode(false);
+            fetchProperties(); // Refetch properties after submit
         } catch (error) {
             console.error('Error:', error);
-            // Handle error
+        }
+    };
+
+    const handleEdit = (property: IPropertyData) => {
+        setPropertyData(property);
+        setEditMode(true);
+        formRef.current?.scrollIntoView({ behavior: 'smooth' }); // Scroll to the form
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            await axios.delete(`/api/propertyform`, {
+                params: {
+                    id: id
+                }
+            });
+            fetchProperties(); // Refetch properties after delete
+        } catch (error) {
+            console.error('Error deleting property:', error);
         }
     };
 
     return (
         <main className='flex items-center justify-center flex-col '>
             <h1 className=' my-16 text-center text-8xl font-extrabold text-white'>Enter Property Details</h1>
-            <div className=' w-7/12 border-2 border-gray-300 bg-gray-950 rounded-lg flex flex-col p-10'>
+            <div ref={formRef} className=' w-7/12 border-2 border-gray-300 bg-gray-950 rounded-lg flex flex-col p-10'>
                 <div className='flex flex-row'>
-                <div className='w-6/12'>
-                    <StyledInput
-                        label="Address"
-                        value={propertyData.basicInformation.address}
-                        onChange={(e) => handleChange('basicInformation', 'address', e.target.value)}
-                    />
+                    <div className='w-6/12'>
+                        <StyledInput
+                            label="Address"
+                            value={propertyData.address}
+                            onChange={(e) => handleChange('address', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Year Built"
-                        value={propertyData.basicInformation.yearBuilt}
-                        onChange={(e) => handleChange('basicInformation', 'yearBuilt', e.target.value)}
-                    />
+                        <StyledInput
+                            label="Year Built"
+                            value={propertyData.yearBuilt}
+                            onChange={(e) => handleChange('yearBuilt', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Bedrooms"
-                        value={propertyData.interiorFeatures.bedrooms}
-                        onChange={(e) => handleChange('interiorFeatures', 'bedrooms', e.target.value)}
-                    />
+                        <StyledInput
+                            label="Bedrooms"
+                            value={propertyData.bedrooms}
+                            onChange={(e) => handleChange('bedrooms', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Bathrooms"
-                        value={propertyData.interiorFeatures.bathrooms}
-                        onChange={(e) => handleChange('interiorFeatures', 'bathrooms', e.target.value)}
-                    />
+                        <StyledInput
+                            label="Bathrooms"
+                            value={propertyData.bathrooms}
+                            onChange={(e) => handleChange('bathrooms', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Local Amenities"
-                        value={propertyData.communityAndLocation.localAmenities}
-                        onChange={(e) => handleChange('communityAndLocation', 'localAmenities', e.target.value)}
-                    />
-
-                    
-                </div>
+                        <StyledInput
+                            label="Local Amenities"
+                            value={propertyData.localAmenities}
+                            onChange={(e) => handleChange('localAmenities', e.target.value)}
+                        />
+                    </div>
                 
-                <div>
-                    <StyledInput
-                        label="Listing Price"
-                        value={propertyData.basicInformation.listingPrice}
-                        onChange={(e) => handleChange('basicInformation', 'listingPrice', e.target.value)}
-                    />
+                    <div>
+                        <StyledInput
+                            label="Listing Price"
+                            value={propertyData.listingPrice}
+                            onChange={(e) => handleChange('listingPrice', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Lot Size"
-                        value={propertyData.propertySize.totalSquareFootage}
-                        onChange={(e) => handleChange('propertySize', 'totalSquareFootage', e.target.value)}
-                    />
+                        <StyledInput
+                            label="Lot Size"
+                            value={propertyData.totalSquareFootage}
+                            onChange={(e) => handleChange('totalSquareFootage', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Floors"
-                        value={propertyData.interiorFeatures.floors}
-                        onChange={(e) => handleChange('interiorFeatures', 'floors', e.target.value)}
-                    />
+                        <StyledInput
+                            label="Floors"
+                            value={propertyData.floors}
+                            onChange={(e) => handleChange('floors', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Available Timings"
-                        value={propertyData.contactInformation.openTime}
-                        onChange={(e) => handleChange('contactInformation', 'openTime', e.target.value)}
-                    />
+                        <StyledInput
+                            label="Available Timings"
+                            value={propertyData.openTime}
+                            onChange={(e) => handleChange('openTime', e.target.value)}
+                        />
 
-                    <StyledInput
-                        label="Contact Number"
-                        value={propertyData.contactInformation.sellerMobile}
-                        onChange={(e) => handleChange('contactInformation', 'sellerMobile', e.target.value)}
-                    />
-                </div>
+                        <StyledInput
+                            label="Contact Number"
+                            value={propertyData.sellerMobile}
+                            onChange={(e) => handleChange('sellerMobile', e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 <button onClick={handleSubmit} className=' btn btn-outline btn-wide self-center'>Submit Property</button>
@@ -194,7 +192,7 @@ const PropertyForm = () => {
                 <h1 className="my-16 text-center text-9xl font-extrabold text-amber-500">Rentify</h1>
                 <div className="w-10/12 grid grid-cols-4 gap-4">
                     {properties.map((property, index) => (
-                        <PropertyCard key={index} property={property} />
+                        <PropertyCard key={index} property={property} handleEdit={handleEdit} handleDelete={handleDelete}/>
                     ))}
                 </div>
                 <div className="flex justify-center mt-8">

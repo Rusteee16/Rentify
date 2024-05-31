@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 export async function connect(){
@@ -6,8 +7,13 @@ export async function connect(){
         const connection = mongoose.connection;
 
         connection.on('connected', () => {
-            console.log('MongoDB connected.');            
+            console.log('MongoDB connected.'); 
+                       
         })
+
+        // await PropertyData.insertMany(propertyDataSeed);
+
+        // console.log("Seed data inserted successfully");
 
         connection.on('error', (error) => {
             console.log('MongoDb connection error. Please make sure MongoDB is running.');

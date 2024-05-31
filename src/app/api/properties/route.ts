@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { connect } from '@/dbConfig/dbConfig';
+import { connect } from '@/db/dbConfig';
 import { PropertyData } from '@/models/dataSchema';
 import { getTokenData } from '@/helpers/getToken';
 
@@ -19,10 +19,9 @@ export async function GET(request: NextRequest){
         const limitNumber = parseInt(limit.toString());
 
         const skip = (pageNumber - 1) * limitNumber;
-        const email = getTokenData(request).email;
 
         const properties = await PropertyData.find().skip(skip).limit(limitNumber);
-        const totalProperties = properties.length;
+        const totalProperties = await PropertyData.countDocuments();
         // console.log(properties);
         
 
@@ -46,12 +45,12 @@ export async function PATCH(request: NextRequest){
             return NextResponse.json({ message: 'Property not found' }, {status: 404});
         }
 
-        property.user.likes += 1;
-        await property.save();
+        property.userLikes += 1;
+        const newProperty = await property.save();
         // console.log("Like updates", property);
         
 
-        return NextResponse.json({ property}, {status: 200});
+        return NextResponse.json({ newProperty}, {status: 200});
     }
     catch(error){
         return NextResponse.json({error: "Like not updated"}, {status: 500});

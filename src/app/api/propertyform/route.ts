@@ -1,4 +1,4 @@
-import { connect } from "@/dbConfig/dbConfig";
+import { connect } from "@/db/dbConfig";
 import { getTokenData } from "@/helpers/getToken";
 import {PropertyData} from "@/models/dataSchema";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest){
             const token = request.cookies.get("token")?.value || '';
             const propertyData = await request.json();
             const tokenData = getTokenData(request);
-            propertyData.user.email = tokenData.email;
+            propertyData.userEmail = tokenData.email;
             // console.log(getTokenData(request));
             // console.log(propertyData);
             
@@ -40,9 +40,9 @@ export async function GET(request: NextRequest){
         const skip = (pageNumber - 1) * limitNumber;
         const email = getTokenData(request).email;
 
-        const properties = await PropertyData.find({ 'user.email': email }).skip(skip).limit(limitNumber);
-        const totalProperties = properties.length;
-        // console.log(properties);
+        const properties = await PropertyData.find({ 'userEmail': email }).skip(skip).limit(limitNumber);
+        const totalProperties = await PropertyData.countDocuments({ userEmail: email });
+        // console.log(totalProperties);
         
 
         return NextResponse.json({ totalProperties, properties },{status: 200});
@@ -74,11 +74,14 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
     try {
         const id = request.nextUrl.searchParams.get("id");
+        // console.log(id);
+        
         if (!id) {
             return NextResponse.json({ message: 'Property ID is required' }, { status: 400 });
             }
-        const data = await request.json();
         const property = await PropertyData.findByIdAndDelete(id);
+        // console.log(property);
+        
         if (!property) {
             return NextResponse.json({ message: 'Property not found' }, { status: 404 });
         }
