@@ -1,40 +1,41 @@
 import { connect } from "@/db/dbConfig";
-import {User} from "@/models/dataSchema";
+import { User } from "@/models/dataSchema";
 import bcryptjs from 'bcryptjs';
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 
 connect()
 
-export async function POST(request: NextRequest){
-    try {   
+export async function POST(request: NextRequest) {
+    try {
         const reqBody = await request.json();
-        const {email, password} = reqBody;
+        const { email, password } = reqBody;
 
-        console.log(reqBody);
-
-        const user = await User.findOne({email})
+        const user = await User.findOne({ email });
         
-        const validPassword = await bcryptjs.compare(password, user.password) 
-        if (!validPassword){
-            return NextResponse.json({error: "Password does not match"},{status: 400})
+        const validPassword = await bcryptjs.compare(password, user.password);
+        if (!validPassword) {
+            return NextResponse.json({ error: "Password does not match" }, { status: 400 });
         }
 
         const tokenData = {
-            id: user._id,
+            id: user._id.toString(),
             email: user.email,
             type: user.type
         };
 
-        const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!,{expiresIn: "1d"});
+        const secret = new TextEncoder().encode(process.env.TOKEN_SECRET);
 
-        const response = NextResponse.json({message: "Login Successfull!", success: true, user: user.type});
+        const token = await new SignJWT(tokenData)
+            .setProtectedHeader({ alg: "HS256" })
+            .setExpirationTime("1d")
+            .sign(secret);
 
-        response.cookies.set("token", token,{httpOnly: true});
+        const response = NextResponse.json({ message: "Login Successful!", success: true, user: user.type });
+        response.cookies.set("token", token, { httpOnly: true });
 
         return response;
-
     } catch (error: any) {
-        return NextResponse.json({error: error.message}, {status: 500})
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

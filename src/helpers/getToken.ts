@@ -1,15 +1,26 @@
-import jwt from "jsonwebtoken";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify, JWTPayload } from "jose";
 
-export const getTokenData = (request: NextRequest) => {
+export const getTokenData = async (request: NextRequest): Promise<JWTPayload | null> => {
     try {
-        const token: string = request.cookies.get("token")?.value || '';
+        const token = request.cookies.get("token")?.value;
+        
+        if (!token) {
+            throw new Error('Token is not provided or is invalid.');
+        }
 
-        const decodedToken: any = jwt.verify(token, process.env.TOKEN_SECRET!);
+        const secretKey = process.env.TOKEN_SECRET;
 
-        return decodedToken;
+        if (!secretKey) {
+            throw new Error('TOKEN_SECRET environment variable is not defined.');
+        }
 
-    } catch (error: any) {
-        throw new Error(error.message)
+        const secret = new TextEncoder().encode(secretKey);
+        
+        const { payload } = await jwtVerify(token, secret);
+        return payload;
+    } catch (error: unknown) {
+        console.error('Error verifying token:', error);
+        return null; 
     }
-}
+};

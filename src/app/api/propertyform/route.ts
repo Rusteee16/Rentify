@@ -9,18 +9,21 @@ export async function POST(request: NextRequest){
         try {
             const token = request.cookies.get("token")?.value || '';
             const propertyData = await request.json();
-            const tokenData = getTokenData(request);
+            const tokenData = await getTokenData(request);
+            if(!tokenData){
+            return NextResponse.json({ error: 'Unauthorized' }, {status: 401});
+        }
             propertyData.userEmail = tokenData.email;
             // console.log(getTokenData(request));
             // console.log(propertyData);
             
             
             const newProperty = new PropertyData(propertyData);
-            console.log(newProperty);
+            // console.log(newProperty);
             
             
             const savedProperty = await newProperty.save();
-            console.log(savedProperty);
+            // console.log(savedProperty);
             
             return NextResponse.json({ success: true, property: savedProperty },{status: 200});
         } catch (error: any) {
@@ -38,7 +41,13 @@ export async function GET(request: NextRequest){
         const limitNumber = parseInt(limit.toString());
 
         const skip = (pageNumber - 1) * limitNumber;
-        const email = getTokenData(request).email;
+        const tokenData = await getTokenData(request);
+        // console.log(tokenData);
+        if(!tokenData){
+            return NextResponse.json({ error: 'Unauthorized' }, {status: 401});
+        }
+        
+        const email = tokenData.email;
 
         const properties = await PropertyData.find({ 'userEmail': email }).skip(skip).limit(limitNumber);
         const totalProperties = await PropertyData.countDocuments({ userEmail: email });

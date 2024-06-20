@@ -8,15 +8,22 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      fontFamily: {
+        kavoon: ["Kavoon", "serif"],
+        rajdhani: ["Rajdhani", "sans-serif"],
       },
+      backgroundImage: {
+        'hero-pattern': "url('/hero.svg')",
+        'properties-texture': "url('/stacked-steps-haikei.svg')",
+      },
+      colors: {
+        ebonyClay: '#222831',
+        tuna: '#31363F',
+        gulfStream: '#76ABAE',
+        gallery: '#EEEEEE'
+      }
     },
   },
-  plugins: [
-    require('daisyui'),
-  ],
+  plugins: [],
 };
 export default config;
