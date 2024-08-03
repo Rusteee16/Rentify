@@ -64,6 +64,7 @@ const Home = () => {
   const [totalProperties, setTotalProperties] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isVerified, setIsVerified] = useState(false);
   const propertiesPerPage = 8;
 
   const formRef = useRef<HTMLDivElement>(null);
@@ -78,6 +79,7 @@ const Home = () => {
 
       setProperties(response.data.properties);
       setTotalProperties(response.data.totalProperties);
+      setIsVerified(response.data.isVerified);
     } catch (error) {
       toast.error("Error fetching properties");
       console.error("Error fetching properties:", error);
@@ -131,6 +133,10 @@ const Home = () => {
 
   // Submit form data
   const handleSubmit = async () => {
+    if (!isVerified) {
+      toast.error("Please verify your account before submitting a property");
+      return;
+    }
     if (!validateFields()) {
       toast.error("Please fix the errors in the form");
       return;

@@ -1,6 +1,6 @@
 import { connect } from "@/db/dbConfig";
 import { getTokenData } from "@/helpers/getToken";
-import {PropertyData} from "@/models/dataSchema";
+import {PropertyData, User} from "@/models/dataSchema";
 import { NextRequest, NextResponse } from "next/server";
 
 connect()
@@ -48,13 +48,14 @@ export async function GET(request: NextRequest){
         }
         
         const email = tokenData.email;
+        const user = await User.findById(tokenData.id);
 
         const properties = await PropertyData.find({ 'userEmail': email }).skip(skip).limit(limitNumber);
         const totalProperties = await PropertyData.countDocuments({ userEmail: email });
         // console.log(totalProperties);
         
 
-        return NextResponse.json({ totalProperties, properties },{status: 200});
+        return NextResponse.json({ totalProperties, properties, isVerified: user.isVerified },{status: 200});
     } catch (error) {
         console.error('Error fetching properties:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, {status: 500});
