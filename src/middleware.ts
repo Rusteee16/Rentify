@@ -3,35 +3,28 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
+  const { pathname: path } = request.nextUrl;
 
-  const isPublicPath = path === '/register' || path === '/login';
-  const isHome = path === '/';
-  const isSeller = path === '/propertyform';
+  const isPublicPath = ['/register', '/login'].includes(path);
+  const sellerPath = path === '/propertyform';
 
   const token = request.cookies.get('token')?.value || '';
   let tokenData;
   let type;
-  if(token){
+
+  if (token) {
     tokenData = await getTokenData(request);
     type = tokenData?.type;
   }
-  
 
   if (isPublicPath && token) {
-    if (type === 'seller') {
-      return NextResponse.redirect(new URL('/propertyform', request.url));
-    } else {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+    const redirectUrl = type === 'seller' ? '/propertyform' : '/';
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
-  if (isSeller && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  if (isSeller && (type === '' || type === 'buyer')) {
-    return NextResponse.redirect(new URL('/', request.url));
+  if (sellerPath && (!token || !type || type === 'buyer')) {
+    const redirectUrl = !token ? '/login' : '/';
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 }
 

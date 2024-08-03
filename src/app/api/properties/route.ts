@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
         try{
             const tokenData =  await getTokenData(request);
-            const id = tokenData.id;
+            const id = tokenData?.id;
             const user = await User.findById(id);
             liked = user.liked;
         } catch{

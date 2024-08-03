@@ -17,19 +17,34 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, liked }) => {
   const [likes, setLikes] = useState<number | undefined>(property.likes);
   const [userLiked, setUserLiked] = useState(liked);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isVerified, setIsVerified] = useState<boolean>(false);
+
+  const checkAuth = async () => {
+    const response = await axios.get("/api/authcheck");
+    setIsAuthenticated(response.data.isAuthenticated);
+  };
 
   // Check if the user is authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      const response = await axios.get("/api/authcheck");
-      setIsAuthenticated(response.data.isAuthenticated);
-    };
     checkAuth();
   }, []);
 
   const handleLike = async () => {
     if (!isAuthenticated) {
       toast.warning("Please log in to like properties.", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+        transition: Bounce,
+      });
+      return;
+    }
+    if (!isVerified) {
+      toast.warning("Please verify your email to like properties.", {
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: true,

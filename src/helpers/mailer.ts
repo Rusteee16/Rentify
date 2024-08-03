@@ -13,13 +13,13 @@ interface SendEmailProps {
 
 export const sendEmail = async ({ email, emailType, userId, buyerDetails, sellerDetails }: SendEmailProps) => {
   try {
-    // const hashedToken = await bcryptjs.hash(userId.toString(), 10);
+    const hashedToken = await bcryptjs.hash(userId.toString(), 10);
 
-    // if (emailType === "VERIFY") {
-    //   await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000 });
-    // } else if (emailType === "RESET") {
-    //   await User.findByIdAndUpdate(userId, { forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + 3600000 });
-    // }
+    if (emailType === "VERIFY") {
+      await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000 });
+    } else if (emailType === "RESET") {
+      await User.findByIdAndUpdate(userId, { forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + 3600000 });
+    }
 
     const transporter = nodemailer.createTransport({
       host: "sandbox.smtp.mailtrap.io",
@@ -33,17 +33,37 @@ export const sendEmail = async ({ email, emailType, userId, buyerDetails, seller
     let subject = '';
     let htmlContent = '';
 
-    // if (emailType === "VERIFY") {
-    //   subject = "Verify your email";
-    //   htmlContent = `<p>Click <a href="${process.env.DOMAIN}/verifyemail?token=${hashedToken}">here</a> to verify your Email
-    //     or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/verifyemail?token=${hashedToken}
-    //     </p>`;
-    // } else if (emailType === "RESET") {
-    //   subject = "Reset your password";
-    //   htmlContent = `<p>Click <a href="${process.env.DOMAIN}/passwordreset?token=${hashedToken}">here</a> to reset your Password
-    //     or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/passwordreset?token=${hashedToken}
-    //     </p>`;
-    // } else if (emailType === "INTEREST") {}
+    if (emailType === "VERIFY") {
+      subject = "Verify your email";
+      htmlContent = `<p>Click <a href="${process.env.DOMAIN}/api/verifyemail?token=${hashedToken}">here</a> to verify your Email
+        or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/verifyemail?token=${hashedToken}
+        </p>`;
+
+        const verifyMailOptions = {
+          from: 'authrentify@gmail.com',
+          to: email,
+          subject: subject,
+          html: htmlContent
+        };
+
+        await transporter.sendMail(verifyMailOptions);
+        return NextResponse.json({message: "Mail sent to verify email."}, {status: 200});
+    } else if (emailType === "RESET") {
+      subject = "Reset your password";
+      htmlContent = `<p>Click <a href="${process.env.DOMAIN}/reset/passwordreset?token=${hashedToken}">here</a> to reset your Password
+        or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/passwordreset?token=${hashedToken}
+        </p>`;
+
+        const resetMailOptions = {
+          from: 'authrentify@gmail.com',
+          to: email,
+          subject: subject,
+          html: htmlContent
+        };
+
+        await transporter.sendMail(resetMailOptions);
+        return NextResponse.json({message: "Mail sent to reset password."}, {status: 200});
+    } else if (emailType === "INTEREST") {
     subject = "Buyer Interested in Your Property";
     htmlContent = `<p>A buyer has expressed interest in your property.</p>
       <h3>Buyer Details:</h3>
@@ -76,6 +96,7 @@ export const sendEmail = async ({ email, emailType, userId, buyerDetails, seller
     await transporter.sendMail(buyerMailOptions);
     
     return NextResponse.json({message: "Mail sent to seller and buyer."}, {status: 200});
+  }
 
   } catch (error: any) {
     throw new Error(error.message);

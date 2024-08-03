@@ -7,6 +7,8 @@ import { IPropertyData } from "@/interfaces/IProperties";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NavBar from "@/components/navbar/page";
+import propertySchema from "@/helpers/propertySchema";
+import * as Yup from "yup";
 
 // City, type, and amenities options
 const cities = [
@@ -89,42 +91,19 @@ const Home = () => {
   const totalPages = Math.ceil(totalProperties / propertiesPerPage);
 
   // Validate form fields
-  const validateFields = () => {
-    let valid = true;
-    const newErrors: { [key: string]: string } = {};
-
-    if (!propertyData.address) {
-      valid = false;
-      newErrors.address = "Address is required";
+  const validateFields = async () => {
+    try {
+      await propertySchema.validate(propertyData, { abortEarly: false });
+      setErrors({});
+      return true;
+    } catch (err: any) {
+      const newErrors: { [key: string]: string } = {};
+      err.inner.forEach((error: Yup.ValidationError) => {
+        newErrors[error.path!] = error.message;
+      });
+      setErrors(newErrors);
+      return false;
     }
-
-    if (propertyData.cost <= 0) {
-      valid = false;
-      newErrors.cost = "Cost must be a positive number";
-    }
-
-    if (propertyData.area <= 0) {
-      valid = false;
-      newErrors.area = "Area must be a positive number";
-    }
-
-    if (
-      !propertyData.visitTimings.match(
-        /^(\d{1,2}:\d{2}\s?[APM]{2}\s?-\s?\d{1,2}:\d{2}\s?[APM]{2})$/
-      )
-    ) {
-      valid = false;
-      newErrors.visitTimings =
-        "Visit timings must be in '8:00 AM - 5:30 PM' format";
-    }
-
-    if (propertyData.yearBuilt < 0) {
-      valid = false;
-      newErrors.yearBuilt = "Year Built must be a positive number";
-    }
-
-    setErrors(newErrors);
-    return valid;
   };
 
   // Handle field changes

@@ -107,12 +107,12 @@ const Login = () => {
             >
               Not Registered?
             </Link>
-            {/* <Link
-              href="/register"
+            <Link
+              href="/reset/send_reset_mail"
               className="text-sm text-gulfStream hover:underline"
             >
               Forgot Password?
-            </Link> */}
+            </Link>
           </div>
 
           <div className="text-center">

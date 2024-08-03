@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Define schema for PropertyData
+// Schema for PropertyData
 const propertyDataSchema = new mongoose.Schema({
   userEmail: { type: String, required: true },   
   likes: { type: Number, default: 0 },           
@@ -18,7 +18,7 @@ const propertyDataSchema = new mongoose.Schema({
 });
 
 
-// Define schema for user
+// Schema for user
 const userSchema = new mongoose.Schema({
     fname: { type: String, required: true },
     lname: { type: String, required: true },
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema({
 
 
 
-// Define models
+// Models
 const PropertyData = mongoose.models.propertydatas || mongoose.model('propertydatas', propertyDataSchema);
 const User = mongoose.models.users || mongoose.model('users', userSchema);
 
