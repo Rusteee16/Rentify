@@ -8,15 +8,30 @@ services:
     volumes:
       - rentify_volume:/data/db
 
-  backend22:
-    image: rusteee/renfity
+  mongoseed:
+    image: mongoseed
+    container_name: mongoseed
+    depends_on:
+      - mongodb
+    environment:
+      MONGODB_URL: "mongodb://mongodb:27017"
+      PORT: "3001"
+    command: ["sh", "-c", "./start.sh && sleep 10"]
+
+  rentify:
+    image: rusteee/rentify
     container_name: rentify
     depends_on:
       - mongodb
+      - mongoseed
     ports:
       - "3000:3000"
     environment:
-      MONGO_URL: "mongodb://mongodb:27017"
+      MONGODB_URL: "mongodb://mongodb:27017"
+      TOKEN_SECRET: ""
+      MAILTRAP_USERNAME: ""
+      MAILTRAP_PASSWORD: ""
+      DOMAIN: "http://localhost:3000/"
 
 volumes:
   rentify_volume:
